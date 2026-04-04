@@ -32,11 +32,14 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
       throw AppError.unauthorized('Missing or invalid authorization header. Expected: Bearer <token>');
     }
 
-    const token = authHeader.split(' ')[1];
+    let token = authHeader.split(' ')[1];
 
     if (!token) {
       throw AppError.unauthorized('Token not provided');
     }
+
+    // Strip surrounding quotes if the user accidentally included them
+    token = token.replace(/(^"|"$)/g, '').replace(/(^'|'$)/g, '');
 
     const decoded = jwt.verify(token, config.jwt.secret) as JwtPayload;
 
@@ -52,7 +55,7 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
       return;
     }
     if (error instanceof jwt.JsonWebTokenError) {
-      next(AppError.unauthorized('Invalid token'));
+      next(AppError.unauthorized(`Invalid token: ${error.message}`));
       return;
     }
     next(AppError.unauthorized('Authentication failed'));
@@ -68,8 +71,11 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return next();
     }
-    const token = authHeader.split(' ')[1];
+    let token = authHeader.split(' ')[1];
     if (!token) return next();
+
+    // Strip surrounding quotes if the user accidentally included them
+    token = token.replace(/(^"|"$)/g, '').replace(/(^'|'$)/g, '');
 
     const decoded = jwt.verify(token, config.jwt.secret) as JwtPayload;
     req.user = decoded;
