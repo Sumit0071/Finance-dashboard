@@ -15,7 +15,63 @@ const router = Router();
 // All records routes require authentication
 router.use(authenticate);
 
-// GET /api/records — List records (all authenticated users)
+/**
+ * @openapi
+ * tags:
+ *   name: Records
+ *   description: Financial records management
+ */
+
+/**
+ * @openapi
+ * /records:
+ *   get:
+ *     summary: Get a list of financial records
+ *     tags: [Records]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: integer
+ *         description: Number of records per page
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [INCOME, EXPENSE]
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: minAmount
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: maxAmount
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: Return list of records
+ */
 router.get(
   '/',
   requireMinRole('VIEWER'),
@@ -23,7 +79,27 @@ router.get(
   recordsController.listRecords
 );
 
-// GET /api/records/:id — Get a single record (all authenticated users)
+/**
+ * @openapi
+ * /records/{id}:
+ *   get:
+ *     summary: Get a specific record by ID
+ *     tags: [Records]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Record ID
+ *     responses:
+ *       200:
+ *         description: The record object
+ *       404:
+ *         description: Record not found
+ */
 router.get(
   '/:id',
   requireMinRole('VIEWER'),
@@ -31,7 +107,41 @@ router.get(
   recordsController.getRecordById
 );
 
-// POST /api/records — Create record (Admin only)
+/**
+ * @openapi
+ * /records:
+ *   post:
+ *     summary: Create a new financial record
+ *     tags: [Records]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *               - type
+ *               - category
+ *             properties:
+ *               amount:
+ *                 type: number
+ *               type:
+ *                 type: string
+ *                 enum: [INCOME, EXPENSE]
+ *               category:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       201:
+ *         description: Record created successfully
+ */
 router.post(
   '/',
   requireRole('ADMIN'),
@@ -39,7 +149,46 @@ router.post(
   recordsController.createRecord
 );
 
-// PATCH /api/records/:id — Update record (Admin only)
+/**
+ * @openapi
+ * /records/{id}:
+ *   patch:
+ *     summary: Update an existing record
+ *     tags: [Records]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Record ID
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               amount:
+ *                 type: number
+ *               type:
+ *                 type: string
+ *                 enum: [INCOME, EXPENSE]
+ *               category:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       200:
+ *         description: Record updated successfully
+ *       404:
+ *         description: Record not found
+ */
 router.patch(
   '/:id',
   requireRole('ADMIN'),
@@ -47,7 +196,27 @@ router.patch(
   recordsController.updateRecord
 );
 
-// DELETE /api/records/:id — Soft-delete record (Admin only)
+/**
+ * @openapi
+ * /records/{id}:
+ *   delete:
+ *     summary: Delete a record
+ *     tags: [Records]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Record ID
+ *     responses:
+ *       204:
+ *         description: Record deleted successfully
+ *       404:
+ *         description: Record not found
+ */
 router.delete(
   '/:id',
   requireRole('ADMIN'),

@@ -11,7 +11,42 @@ const router = Router();
 // Rate limit auth endpoints more strictly
 const authRateLimit = rateLimit(config.rateLimit.authMaxRequests, config.rateLimit.windowMs);
 
-// POST /api/auth/register — Register a new user
+/**
+ * @openapi
+ * tags:
+ *   name: Authentication
+ *   description: User authentication and registration
+ */
+
+/**
+ * @openapi
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - name
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ */
 router.post(
   '/register',
   authRateLimit,
@@ -19,7 +54,31 @@ router.post(
   authController.register
 );
 
-// POST /api/auth/login — Login and get JWT
+/**
+ * @openapi
+ * /auth/login:
+ *   post:
+ *     summary: Login to get access token
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successfully logged in
+ */
 router.post(
   '/login',
   authRateLimit,
@@ -27,7 +86,18 @@ router.post(
   authController.login
 );
 
-// GET /api/auth/profile — Get current user profile
+/**
+ * @openapi
+ * /auth/profile:
+ *   get:
+ *     summary: Get current logged in user profile
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user profile
+ */
 router.get(
   '/profile',
   authenticate,

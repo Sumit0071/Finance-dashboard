@@ -6,7 +6,8 @@ import { errorHandler } from './middleware/errorHandler';
 import { rateLimit } from './middleware/rateLimit';
 import { config } from './config';
 import { sendError } from './utils/response';
-
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 // Import routes
 import authRoutes from './modules/auth/auth.routes';
 import usersRoutes from './modules/users/users.routes';
@@ -29,7 +30,21 @@ if (config.nodeEnv === 'development') {
 // ─── Global Rate Limit ────────────────────────────
 app.use(rateLimit(config.rateLimit.maxRequests, config.rateLimit.windowMs));
 
+// ─── Swagger Documentation ────────────────────────
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // ─── Health Check ─────────────────────────────────
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     summary: Health check endpoint
+ *     description: Returns the health status of the API
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: API is healthy
+ */
 app.get('/api/health', (_req, res) => {
   res.json({
     success: true,
