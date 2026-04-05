@@ -92,14 +92,23 @@ npm run build
 npm start
 ```
 
-## API Documentation (Swagger)
+## Live Demo & Testing
 
-This API includes an interactive Swagger UI for exploring and testing endpoints directly from your browser. 
+You can instantly test the live production API and explore its capabilities using the deployed Swagger UI:
+👉 **[http://sumit-finance-app.duckdns.org/api/docs](http://sumit-finance-app.duckdns.org/api/docs)**
 
-Once the server is running (either via `npm run dev` or Docker), visit:
+To test the **Role-Based Access Control (RBAC)** features, the database has been pre-seeded with 25 financial records and the following three distinct role profiles. Click **"Authorize"** in Swagger and use the token returned from the `/api/auth/login` endpoint using these credentials:
+
+* **Admin Role (Full CRUD Access):** `admin@zorvyn.com` | Password: `admin123`
+* **Analyst Role (Read & Dashboard Insights):** `analyst@zorvyn.com` | Password: `analyst123`
+* **Viewer Role (Strict Read-Only):** `viewer@zorvyn.com` | Password: `viewer123`
+
+## API Documentation (Swagger) Locally
+
+If you are running the application on your own machine in development, the documentation dynamically routes itself locally:
 👉 **[http://localhost:3000/api/docs](http://localhost:3000/api/docs)**
 
-You can authorize requests by clicking the **"Authorize"** button and entering your JWT token as `Bearer <your_token>`.
+*(Note: In production deployments, Swagger is disabled by default for security unless explicitly enabled in `.env` or Helmet configs).*
 
 ## Docker Deployment
 
