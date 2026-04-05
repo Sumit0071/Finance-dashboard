@@ -111,7 +111,7 @@ docker build -t finance-dashboard-api .
 ```
 
 **2. Run the Container**
-```bash
+````bash
 # Ensure you pass in your environment variables file
 docker run -d -p 3000:3000 --env-file .env --name finance-api finance-dashboard-api
 ```
