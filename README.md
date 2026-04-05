@@ -11,6 +11,8 @@ A robust, secure, and maintainable backend for a finance dashboard system. This 
 - **Robust Validation**: Type-safe input validation using Zod.
 - **ORM & Database**: Prisma ORM with PostgreSQL for robust data management and type-safe query building.
 - **Testing**: Comprehensive automated testing using Jest and Supertest.
+- **API Documentation**: Interactive API documentation automatically generated with Swagger UI.
+- **Docker Ready**: Includes a multi-stage Dockerfile and optimized Alpine configuration for rapid deployment.
 
 ## Tech Stack
 
@@ -22,11 +24,14 @@ A robust, secure, and maintainable backend for a finance dashboard system. This 
 - **Validation**: Zod
 - **Authentication**: JSON Web Tokens (JWT) & bcryptjs
 - **Testing**: Jest & Supertest
+- **API Docs**: Swagger UI & swagger-jsdoc
+- **Containerization**: Docker
 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18+ recommended)
 - [PostgreSQL](https://www.postgresql.org/) database server running locally or remotely.
+- [Docker](https://www.docker.com/) (optional, for containerized deployments)
 
 ## Getting Started
 
@@ -85,6 +90,36 @@ To build and run the production version:
 ```bash
 npm run build
 npm start
+```
+
+## API Documentation (Swagger)
+
+This API includes an interactive Swagger UI for exploring and testing endpoints directly from your browser. 
+
+Once the server is running (either via `npm run dev` or Docker), visit:
+👉 **[http://localhost:3000/api/docs](http://localhost:3000/api/docs)**
+
+You can authorize requests by clicking the **"Authorize"** button and entering your JWT token as `Bearer <your_token>`.
+
+## Docker Deployment
+
+A highly-optimized, multi-stage `Dockerfile` is included for production deployments. It uses `node:18-alpine` and automatically handles dependencies, Prisma asset compilation, and TypeScript build steps without bloating the final image.
+
+**1. Build the Image**
+```bash
+docker build -t finance-dashboard-api .
+```
+
+**2. Run the Container**
+```bash
+# Ensure you pass in your environment variables file
+docker run -d -p 3000:3000 --env-file .env --name finance-api finance-dashboard-api
+```
+
+**3. Run Database Migrations (on a fresh setup)**
+```bash
+# Apply Prisma schema to the production database via the running container
+docker exec -it finance-api npx prisma migrate deploy
 ```
 
 ## Available Scripts
