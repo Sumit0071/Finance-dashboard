@@ -13,14 +13,12 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  // Log error in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error('🔴 Error:', {
-      name: err.name,
-      message: err.message,
-      stack: err.stack,
-    });
-  }
+  // Always log standard errors for Docker to capture, but only include stack trace in development
+  console.error('🔴 Error:', {
+    name: err.name,
+    message: err.message,
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+  });
 
   // Handle known operational errors
   if (err instanceof AppError) {

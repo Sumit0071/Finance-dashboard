@@ -14,6 +14,10 @@ const options: swaggerJsdoc.Options = {
         url: `http://localhost:${config.port}/api`,
         description: 'Development server',
       },
+      {
+        url: `http://sumit-finance-app.duckdns.org/api`,
+        description: 'Production server',
+      }
     ],
     components: {
       securitySchemes: {

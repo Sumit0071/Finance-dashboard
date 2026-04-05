@@ -16,6 +16,9 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes';
 
 const app = express();
 
+// Trust reverse proxy (for Docker mappings, Cloudflare, NGINX) to get real client IPs
+app.set('trust proxy', 1);
+
 // ─── Security & Parsing ───────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
