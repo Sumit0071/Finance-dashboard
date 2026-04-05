@@ -1,10 +1,13 @@
-import { PrismaClient } from '../src/generated/prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcryptjs';
 import 'dotenv/config';
+import fs from 'fs';
+import path from 'path';
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+// Dynamically load the Prisma instance depending on if we are in TS Dev or JS Prod
+const isProd = fs.existsSync(path.join(__dirname, '../dist/config/database.js'));
+const prisma = isProd 
+  ? require('../dist/config/database.js').default 
+  : require('../src/config/database.ts').default;
 
 async function main() {
   console.log('🌱 Seeding database...');
