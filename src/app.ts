@@ -17,7 +17,17 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes';
 const app = express();
 
 // ─── Security & Parsing ───────────────────────────
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "upgrade-insecure-requests": null, // Prevents browser from forcing HTTPS when on raw HTTP
+      "script-src": ["'self'", "'unsafe-inline'"], // Needed for Swagger UI
+      "style-src": ["'self'", "'unsafe-inline'"], // Needed for Swagger UI
+      "img-src": ["'self'", "data:", "validator.swagger.io"]
+    }
+  }
+}));
 app.use(cors());
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
