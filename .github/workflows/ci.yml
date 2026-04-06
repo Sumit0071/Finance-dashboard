@@ -1,0 +1,124 @@
+name: CI checks and Docker Image Builder
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  test-and-build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    
+    # We provision a postgres service to support full Prisma integration tests
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: password123
+          POSTGRES_DB: finance_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run db:generate
+
+      - name: Push Database Migrations
+        env:
+          DATABASE_URL: postgresql://admin:password123@localhost:5432/finance_test
+        run: npx prisma db push
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Run Tests
+        env:
+          DATABASE_URL: postgresql://admin:password123@localhost:5432/finance_test
+          JWT_SECRET: testing_jwt_secret_key_123!
+          PORT: 3000
+        run: npm run test
+
+  build-and-push-image:
+    name: Build & Push Docker Image
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    # Only push image on main/master branches, not PRs
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/finance-dashboard:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-to-ec2:
+    name: Deploy to EC2
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: SSH into EC2 and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 1. Pull the latest image
+            docker pull ${{ secrets.DOCKER_USERNAME }}/finance-dashboard:latest
+            
+            # 2. Stop and remove the existing container (ignore errors if it doesn't exist)
+            docker stop finance-dashboard || true
+            docker rm finance-dashboard || true
+            
+            # 3. Run the new container
+            # Make sure you have a .env file on your EC2 instance in the home or project directory!
+            # Example: docker run -d --name finance-dashboard -p 3000:3000 --env-file /path/to/.env ${{ secrets.DOCKER_USERNAME }}/finance-dashboard:latest
+            
+            docker run -d \
+              --name finance-dashboard \
+              -p 3000:3000 \
+              --env-file /home/${{ secrets.EC2_USERNAME }}/.env \
+              --restart unless-stopped \
+              ${{ secrets.DOCKER_USERNAME }}/finance-dashboard:latest
+              
+            # Clean up old unused images to save disk space on EC2
+            docker image prune -a -f
