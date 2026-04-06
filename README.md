@@ -25,7 +25,7 @@ A robust, secure, and maintainable backend for a finance dashboard system. This 
 - **Authentication**: JSON Web Tokens (JWT) & bcryptjs
 - **Testing**: Jest & Supertest
 - **API Docs**: Swagger UI & swagger-jsdoc
-- **Containerization**: Docker
+- **Containerization**: Docker & GitHub Actions (CI/CD)
 
 ## Prerequisites
 
@@ -130,6 +130,31 @@ docker run -d -p 3000:3000 --env-file .env --name finance-api finance-dashboard-
 # Apply Prisma schema to the production database via the running container
 docker exec -it finance-api npx prisma migrate deploy
 ```
+
+## CI/CD Pipeline (GitHub Actions)
+
+This project uses a fully automated CI/CD pipeline via GitHub Actions (`.github/workflows/ci.yml`).
+
+### Continuous Integration (CI)
+On every push or pull request to the `main` branch, the pipeline automatically:
+1. Provisions an ephemeral PostgreSQL database.
+2. Installs dependencies and generates the Prisma client.
+3. Compiles the TypeScript application.
+4. Executes the full Jest test suite seamlessly against the test database.
+
+### Continuous Deployment (CD)
+If the branch is `main` and all CI checks pass, the pipeline:
+1. Builds a new Docker engine image and securely pushes it to **Docker Hub**.
+2. Connects to the **EC2 Production Server** via SSH.
+3. Automatically pulls the new image, shuts down the old container, and restarts the environment using the server's local `.env` file variables.
+
+**Required GitHub Secrets for Deployment:**
+To run the automated deployment perfectly, configure the following keys in your repository (**Settings > Secrets and variables > Actions**):
+- `DOCKER_USERNAME`: Your Docker Hub username.
+- `DOCKER_PASSWORD`: Your Docker Hub password or access token.
+- `EC2_HOST`: The Public IPv4 address or DNS of your AWS EC2 instance.
+- `EC2_USERNAME`: The system username of your EC2 instance (e.g., `ubuntu` or `ec2-user`).
+- `EC2_SSH_KEY`: The full contents of your `.pem` private key file for EC2 SSH access.
 
 ## Available Scripts
 
